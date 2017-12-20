@@ -111,7 +111,7 @@ class Key:
 			tour_keys['tour_key0'].append(my_key['Key'][i])
 			# chunk 2 (N-3)
 		tour_keys['tour_key0'].append(hex((int(my_key['Key'][(my_key['Key_Size'] / 64) - 3],16) + int(tweaks['Tweak0'],16)) % (2**64))[2:-1])
-			# chunk 3 (N-2)
+			# chunk 3	 (N-2)
 		tour_keys['tour_key0'].append(hex((int(my_key['Key'][(my_key['Key_Size'] / 64) - 2],16) + int(tweaks['Tweak1'],16)) % (2**64))[2:-1])
 			# chunk 4 (N-1)
 		tour_keys['tour_key0'].append(hex((int(my_key['Key'][(my_key['Key_Size'] / 64) - 1],16) + 0) % (2**64))[2:-1])
@@ -137,12 +137,46 @@ class Key:
 		# and returns the dictionnary
 		return tour_keys		
 
+class Encryption:
+        def __init__(self, m, s):
+                bloc_size = s
+		message = m
+		# generer les cles ici
+		self.tf_main(self.pad(message,bloc_size))
+                return
+
+	def rot(slef,m,k,n):
+        	return ((m<<k)|(m>>(n-k)))&((1<<n)-1)
+
+	def mix(self,m1,m2):
+		"""
+		Mixe une paire de mots
+		"""
+		m1_new = int(m1,16) + int(m2,16) % (2**64)
+		m2_new = m1_new ^ rot(m2,12,64)
+		return m1_new,m2_new
+
+	def pad(self,m,s):
+		binary = bin(int(binascii.hexlify(m),16))[2:]
+		binary = binary.zfill(len(binary) + 8-(len(binary) % 8))
+		binary = binary + '0'*(s - (len(binary) % s))
+		print "Formatted message :"
+		print binary
+		return binary
+
+	def tf_main(self, m):
+		encrypted_message = m
+		return encrypted_message
+		
+
 # ---------- # 
 # here we go #
 # ---------- #
 
-key = Key()
-my_key = key.generate_key(512)
-print 'My key is :',
-print my_key['Key']
-print key.generate_tour_keys()
+#key = Key()
+#my_key = key.generate_key(512)
+#print 'My key is :',
+#print my_key['Key']
+#print key.generate_tour_keys()
+
+enc = Encryption("Coucou comment ca va ? Moi ca va pas mal",256)
