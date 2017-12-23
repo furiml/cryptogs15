@@ -145,18 +145,29 @@ class Encryption:
 		self.tf_main(self.pad(message,bloc_size))
                 return
 
-	def rot(slef,m,k,n):
+	def rot(self,m,k,n):
+		"""
+		Perform a binary left rotation of the message (ie. 0100 -> 1000 if k = 1)
+		m: message to rotate
+		k: number of bits to rotate
+		n: size of the message
+		"""
         	return ((m<<k)|(m>>(n-k)))&((1<<n)-1)
 
 	def mix(self,m1,m2):
 		"""
-		Mixe une paire de mots
+		Mix a pair of words
 		"""
 		m1_new = int(m1,16) + int(m2,16) % (2**64)
 		m2_new = m1_new ^ rot(m2,12,64)
 		return m1_new,m2_new
 
 	def pad(self,m,s):
+		"""
+		Add zeros at the end of the message to complete the block
+		m: message
+		s: size of the blocks
+		"""
 		binary = bin(int(binascii.hexlify(m),16))[2:]
 		binary = binary.zfill(len(binary) + 8-(len(binary) % 8))
 		binary = binary + '0'*(s - (len(binary) % s))
