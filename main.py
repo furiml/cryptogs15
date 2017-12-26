@@ -118,7 +118,7 @@ class Key:
 
 		# -------------------------------- #
 		# first tour generation stops here #
-		#								   #
+		#				   #
 		# and loop generation starts here  #
 		# -------------------------------- #
 		for i in range(1,20):
