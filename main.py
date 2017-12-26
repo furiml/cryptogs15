@@ -127,10 +127,10 @@ class Key:
 				tour_keys['tour_key{0}'.format(i)].append(my_key['Key'][(i + j) % ((my_key['Key_Size'] / 64) + 1)])
 				# chunk 2 mind the wrap
 			tour_keys['tour_key{0}'.format(i)].append(hex((int(my_key['Key'][(i + (my_key['Key_Size'] / 64) - 3) 
-				% ((my_key['Key_Size'] / 64) + 1)],16) + int(tweaks['Tweak{}'.format(i % 3)],16)))[2:-1])
+				% ((my_key['Key_Size'] / 64) + 1)],16) + int(tweaks['Tweak{}'.format(i % 3)],16)) % (2**64))[2:-1])
 				# chunk 3 mind the wrap
 			tour_keys['tour_key{0}'.format(i)].append(hex((int(my_key['Key'][(i + (my_key['Key_Size'] / 64) - 2) 
-				% ((my_key['Key_Size'] / 64) + 1)],16) + int(tweaks['Tweak{}'.format((i + 1)% 3)],16)))[2:-1])
+				% ((my_key['Key_Size'] / 64) + 1)],16) + int(tweaks['Tweak{}'.format((i + 1)% 3)],16)) % (2**64))[2:-1])
 				# chunk 4 mind the wrap
 			tour_keys['tour_key{0}'.format(i)].append(hex((int(my_key['Key'][(i + (my_key['Key_Size'] / 64) - 1) 
 				% ((my_key['Key_Size'] / 64) + 1)],16) + i))[2:-1])
