@@ -138,11 +138,12 @@ class Key:
 		return tour_keys		
 
 class Encryption:
-        def __init__(self, m, s):
-                bloc_size = s
+        def __init__(self, m, s, keyset):
+                self.block_size = s
 		message = m
+		self.keyset = keyset
 		# generer les cles ici
-		self.tf_main(self.pad(message,bloc_size))
+		self.tf_main(self.pad(message,self.block_size),keyset)
                 return
 
 	def rot(self,m,k,n):
@@ -156,7 +157,7 @@ class Encryption:
 
 	def mix(self,m1,m2):
 		"""
-		Mix a pair of words
+		Mix a pair of words (64 bits)
 		"""
 		m1_new = int(m1,16) + int(m2,16) % (2**64)
 		m2_new = m1_new ^ rot(m2,12,64)
@@ -175,8 +176,17 @@ class Encryption:
 		print binary
 		return binary
 
-	def tf_main(self, m):
+	def tf_main(self, m, keys):
 		encrypted_message = m
+		chunked_message = [m[i:i+self.block_size] for i in range(0, len(m), self.block_size)]
+		print "Chunked message:"
+		print chunked_message			
+		# m xor key0
+		# encrypted_message = m ^^
+		print keys['tour_key0']
+		#print bin(int(binascii.hexlify(keys['tour_key0'][0]),16))[2:]
+		for i in range(76):
+			a = 1
 		return encrypted_message
 		
 
@@ -184,10 +194,17 @@ class Encryption:
 # here we go #
 # ---------- #
 
-#key = Key()
-#my_key = key.generate_key(512)
-#print 'My key is :',
-#print my_key['Key']
-#print key.generate_tour_keys()
+key = Key()
+my_key = key.generate_key(256)
+print 'My key is:',
+print my_key['Key']
 
-enc = Encryption("Coucou comment ca va ? Moi ca va pas mal",256)
+print ""
+
+print 'Tour keys:'
+my_tour_keys = key.generate_tour_keys()
+print my_tour_keys
+
+print ""
+
+enc = Encryption("Coucou comment ca va ? Moi ca va pas mal, meme si je suis oblige de bosser ca pendant les vacances, car je veux mon master",256,my_tour_keys)
