@@ -127,13 +127,26 @@ class Key:
 				tour_keys['tour_key{0}'.format(i)].append(my_key['Key'][(i + j) % ((my_key['Key_Size'] / 64) + 1)])
 				# chunk 2 mind the wrap
 			tour_keys['tour_key{0}'.format(i)].append(hex((int(my_key['Key'][(i + (my_key['Key_Size'] / 64) - 3) 
-				% ((my_key['Key_Size'] / 64) + 1)],16) + int(tweaks['Tweak{}'.format(i % 3)],16)))[2:-1])
+				% ((my_key['Key_Size'] / 64) + 1)],16) + int(tweaks['Tweak{}'.format(i % 3)],16)) % (2**64))[2:-1])
 				# chunk 3 mind the wrap
 			tour_keys['tour_key{0}'.format(i)].append(hex((int(my_key['Key'][(i + (my_key['Key_Size'] / 64) - 2) 
-				% ((my_key['Key_Size'] / 64) + 1)],16) + int(tweaks['Tweak{}'.format((i + 1)% 3)],16)))[2:-1])
+				% ((my_key['Key_Size'] / 64) + 1)],16) + int(tweaks['Tweak{}'.format((i + 1)% 3)],16)) % (2**64))[2:-1])
 				# chunk 4 mind the wrap
 			tour_keys['tour_key{0}'.format(i)].append(hex((int(my_key['Key'][(i + (my_key['Key_Size'] / 64) - 1) 
 				% ((my_key['Key_Size'] / 64) + 1)],16) + i))[2:-1])
+		
+		# pad and concatenates the chunks
+		for i in range(1,20):
+			print tour_keys['tour_key{0}'.format(i)]
+			temp = ""
+			for e in tour_keys['tour_key{0}'.format(i)]:
+				new = '0'*(16-len(e))+e
+				print new
+				temp += new
+			print temp
+			tour_keys['tour_key{0}'.format(i)] = temp
+			print ""
+		
 		# and returns the dictionnary
 		return tour_keys		
 
@@ -196,7 +209,7 @@ class Encryption:
 
 key = Key()
 my_key = key.generate_key(256)
-print 'My key is:',
+print 'My key is :',
 print my_key['Key']
 
 print ""
