@@ -144,6 +144,7 @@ class Key:
 				print new
 				temp += new
 			print temp
+			tour_keys['tour_key{0}'.format(i)] = temp
 			print ""
 		
 		# and returns the dictionnary
