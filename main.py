@@ -185,6 +185,7 @@ class Encryption:
 		binary = bin(int(binascii.hexlify(m),16))[2:]
 		binary = binary.zfill(len(binary) + 8-(len(binary) % 8))
 		binary = binary + '0'*(s - (len(binary) % s))
+
 		print "Formatted message :"
 		print binary
 		return binary
@@ -193,11 +194,16 @@ class Encryption:
 		encrypted_message = m
 		chunked_message = [m[i:i+self.block_size] for i in range(0, len(m), self.block_size)]
 		print "Chunked message:"
-		print chunked_message			
-		# m xor key0
-		# encrypted_message = m ^^
-		print keys['tour_key0']
-		#print bin(int(binascii.hexlify(keys['tour_key0'][0]),16))[2:]
+		print chunked_message
+		print ""
+		print "Treating:"
+		print hex(int(chunked_message[0],2))
+		print "XOR"
+		print hex(int(keys['tour_key0'],16))
+		print hex((int(chunked_message[0],2) ^ int(keys['tour_key0'],16)))
+
+		# encrypted_message = m ^
+
 		for i in range(76):
 			a = 1
 		return encrypted_message
