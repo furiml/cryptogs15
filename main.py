@@ -136,7 +136,7 @@ class Key:
 				% ((my_key['Key_Size'] / 64) + 1)],16) + i))[2:-1])
 		
 		# pad and concatenates the chunks
-		for i in range(1,20):
+		for i in range(0,20):
 			print tour_keys['tour_key{0}'.format(i)]
 			temp = ""
 			for e in tour_keys['tour_key{0}'.format(i)]:
