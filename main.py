@@ -134,6 +134,18 @@ class Key:
 				# chunk 4 mind the wrap
 			tour_keys['tour_key{0}'.format(i)].append(hex((int(my_key['Key'][(i + (my_key['Key_Size'] / 64) - 1) 
 				% ((my_key['Key_Size'] / 64) + 1)],16) + i))[2:-1])
+		
+		# pad and concatenates the chunks
+		for i in range(1,20):
+			print tour_keys['tour_key{0}'.format(i)]
+			temp = ""
+			for e in tour_keys['tour_key{0}'.format(i)]:
+				new = '0'*(16-len(e))+e
+				print new
+				temp += new
+			print temp
+			print ""
+		
 		# and returns the dictionnary
 		return tour_keys		
 
@@ -142,7 +154,7 @@ class Key:
 # ---------- #
 
 key = Key()
-my_key = key.generate_key(512)
+my_key = key.generate_key(256)
 print 'My key is :',
 print my_key['Key']
 print key.generate_tour_keys()
