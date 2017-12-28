@@ -156,7 +156,7 @@ class Encryption:
 		message = m
 		self.keyset = keyset
 		# generer les cles ici
-		self.tf_main(self.pad(message,self.block_size),keyset)
+		self.tf_ecb_main(self.pad(message,self.block_size),keyset)
                 return
 
 	def rot(self,m,k,n):
@@ -172,9 +172,9 @@ class Encryption:
 		"""
 		Mix a pair of words (64 bits)
 		"""
-		m1_new = int(m1,16) + int(m2,16) % (2**64)
-		m2_new = m1_new ^ rot(m2,12,64)
-		return m1_new,m2_new
+		m1_new = int(m1,2) + int(m2,2) % (2**64)
+		m2_new = m1_new ^ self.rot(int(m2,2),1,64)
+		return bin(m1_new),bin(m2_new)
 
 	def pad(self,m,s):
 		"""
@@ -188,25 +188,41 @@ class Encryption:
 
 		print "Formatted message :"
 		print binary
+		print ""
 		return binary
 
-	def tf_main(self, m, keys):
-		encrypted_message = m
+	def tf_ecb_main(self, m, keys):
+		encrypted_message = []
 		chunked_message = [m[i:i+self.block_size] for i in range(0, len(m), self.block_size)]
-		print "Chunked message:"
-		print chunked_message
-		print ""
-		print "Treating:"
-		print hex(int(chunked_message[0],2))
-		print "XOR"
-		print hex(int(keys['tour_key0'],16))
-		print hex((int(chunked_message[0],2) ^ int(keys['tour_key0'],16)))
 
-		# encrypted_message = m ^
-
-		for i in range(76):
-			a = 1
-		return encrypted_message
+		# ECB = idependant treatment of each block
+		for id_b, b in enumerate(chunked_message):
+			print "Chunked message #",id_b,":"
+			print
+			print "===================== TOUR 0 ====================="
+			# Init with tour_key0
+			print "HEX;",hex(int(b,2))
+                        print "KEY:",hex(int(keys['tour_key0'],16))
+                        print "RES:",hex((int(b,2) ^ int(keys['tour_key0'],16)))
+                	# For each block, we create a crypted block
+			encrypted_message.append(hex((int(b,2) ^ int(keys['tour_key0'],16))))
+		        print ""
+			
+			for k in range(1,20): # loop through tour_keys
+				print "===================== TOUR",k,"====================="
+				# Extract words (64 bits)
+				b_words = [b[i:i+64] for i in range(0, len(b), 64)]
+				print b_words
+				for w in range(0,len(b_words)/2):
+					print "Words",w*2,"and",w*2+1,":",self.mix(b_words[w*2],b_words[w*2+1])
+				#print mix()
+				
+				#for 
+        	        	print "HEX;",hex(int(b,2))
+                		print "KEY:",hex(int(keys['tour_key{0}'.format(k)],16))
+	                	print "RES:",hex((int(b,2) ^ int(keys['tour_key{0}'.format(k)],16)))
+				print ""
+		return 1
 		
 
 # ---------- # 
