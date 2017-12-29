@@ -176,6 +176,9 @@ class Encryption:
 		m2_new = m1_new ^ self.rot(int(m2,2),1,64)
 		return bin(m1_new),bin(m2_new)
 
+	def permutation(self,b):
+		return b
+
 	def pad(self,m,s):
 		"""
 		Add zeros at the end of the message to complete the block
@@ -191,6 +194,14 @@ class Encryption:
 		print ""
 		return binary
 
+	def pad_left(self,b,s):
+		"""
+		Add zeros at the begining of a number
+		b: binary number
+                s: size of the block
+		"""
+               	return '0'*(s - len(b)) + b
+
 	def tf_ecb_main(self, m, keys):
 		encrypted_message = []
 		chunked_message = [m[i:i+self.block_size] for i in range(0, len(m), self.block_size)]
@@ -204,7 +215,7 @@ class Encryption:
 			print "HEX;",hex(int(b,2))
                         print "KEY:",hex(int(keys['tour_key0'],16))
                         print "RES:",hex((int(b,2) ^ int(keys['tour_key0'],16)))
-                	# For each block, we create a crypted block
+                	# For each block, we create a crypted block. Blocks are not related
 			encrypted_message.append(hex((int(b,2) ^ int(keys['tour_key0'],16))))
 		        print ""
 			
@@ -213,11 +224,18 @@ class Encryption:
 				# Extract words (64 bits)
 				b_words = [b[i:i+64] for i in range(0, len(b), 64)]
 				print b_words
-				for w in range(0,len(b_words)/2):
-					print "Words",w*2,"and",w*2+1,":",self.mix(b_words[w*2],b_words[w*2+1])
-				#print mix()
+
+				# mix
+				for w in range(0,len(b_words)/2): # for every pair of words
+					b_words_new = self.mix(b_words[w*2],b_words[w*2+1])
+					b_words[w*2]   = self.pad_left(b_words_new[0][2:],64)
+					b_words[w*2+1] = self.pad_left(b_words_new[1][2:],64)
+					print "(mix)"
 				
-				#for 
+				print b_words
+				# permutation
+				
+
         	        	print "HEX;",hex(int(b,2))
                 		print "KEY:",hex(int(keys['tour_key{0}'.format(k)],16))
 	                	print "RES:",hex((int(b,2) ^ int(keys['tour_key{0}'.format(k)],16)))
@@ -229,8 +247,10 @@ class Encryption:
 # here we go #
 # ---------- #
 
+B_SIZE = 256
+
 key = Key()
-my_key = key.generate_key(256)
+my_key = key.generate_key(B_SIZE)
 print 'My key is :',
 print my_key['Key']
 
@@ -242,4 +262,4 @@ print my_tour_keys
 
 print ""
 
-enc = Encryption("Coucou comment ca va ? Moi ca va pas mal, meme si je suis oblige de bosser ca pendant les vacances, car je veux mon master",256,my_tour_keys)
+enc = Encryption("Coucou comment ca va ? Moi ca va pas mal, meme si je suis oblige de bosser ca pendant les vacances, car je veux mon master",B_SIZE,my_tour_keys)
