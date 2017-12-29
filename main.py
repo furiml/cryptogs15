@@ -233,8 +233,9 @@ class Encryption:
 					print "(mix)"
 				
 				print b_words
+
 				# permutation
-				
+				self.permutation(b_words)
 
         	        	print "HEX;",hex(int(b,2))
                 		print "KEY:",hex(int(keys['tour_key{0}'.format(k)],16))
