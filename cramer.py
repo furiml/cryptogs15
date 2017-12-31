@@ -10,6 +10,13 @@ class Public:
 		return
 
 	def create_public(self,input_prime):
+		while True :
+			try :
+				input_prime = int(input('Choose a prime : '))
+			except ValueError :						# TODO : tester si input_prime est premier
+				print 'Your choice isn\'t a prime'	# TODO 
+			else :
+				break
 		prime_generators = []
 		for i in range (2,input_prime):
 			for j in range (1,input_prime):
