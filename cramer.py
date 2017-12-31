@@ -16,10 +16,15 @@ class Public:
 					else :
 						break
 		while True:
-			alpha1 = input('Choose your generators amongst {0} (comma separated) : '.format(prime_generators))
-			if alpha1 not in prime_generators:
+			prime_generators_dummy = prime_generators
+			alpha1 = input('Choose your first generator amongst {} : '.format(prime_generators_dummy))
+			if alpha1 in prime_generators_dummy :
+				prime_generators_dummy.pop(index(alpha1))
+			else :
 				raise ValueError
-
+			alpha2 = input('Choose your second generator amongst {} : ').format(prime_generators_dummy)
+			if alpha2 not in prime_generators_dummy :
+				raise ValueError
 
 my_public = Public()
 print my_public.create_public(7)
