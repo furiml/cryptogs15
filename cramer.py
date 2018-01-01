@@ -14,10 +14,15 @@ class Public:
 		while True :
 			try :
 				input_prime = int(input('Choose a prime : '))
+				for i in range(2,input_prime) :
+					if input_prime % i == 0:
+						raise ValueError
+				print 'Good job !'	
 			except ValueError :						# TODO : tester si input_prime est premier
 				print 'Your choice isn\'t a prime'	# TODO 
 			else :
 				break
+
 		# generators listing
 		prime_generators = []
 		for i in range (2,input_prime):
@@ -27,11 +32,12 @@ class Public:
 						prime_generators.append(i)
 					else :
 						break
+
 		# variables definitions
 		while True :
 			prime_generators_dummy = prime_generators
 			try :
-				alpha1 = input('Choose your first generator amongst {} : '.format(prime_generators_dummy))
+				alpha1 = int(input('Choose your first generator amongst {} : '.format(prime_generators_dummy)))
 				if alpha1 in prime_generators_dummy :
 					prime_generators_dummy.remove(alpha1)
 				else :
@@ -55,57 +61,27 @@ class Public:
 						continue
 					else :
 						break
-		# now we choose the integers x1, x2, y1, y2, w
-		while True :
-			try :
-				x1 = input('Choose an integer (x1) smaller than {} : '.format(input_prime))
-				if x1 > input_prime :
-					raise ValueError
-			except Errors :
-				print 'Your choice wasn\'t smaller than {}. Try again'.format(input_prime)
-				continue
-			else :
-				break
-		while True :
-			try :
-				x2 = input('Choose a second integer (x2) smaller than {} : '.format(input_prime))
-				if x2 > input_prime :
-					raise ValueError
-			except Errors :
-				print 'Your choice wasn\'t smaller than {}. Try again'.format(input_prime)
-				continue
-			else : 
-				break
-		while True :
-			try :
-				y1 = input('Choose a third integer (y1) smaller than {} : '.format(input_prime))
-				if y1 > input_prime :
-					raise ValueError
-			except Errors :
-				print 'Your choice wasn\'t smaller than {}. Try again'.format(input_prime)
-				continue
-			else : 
-				break
-		while True :
-			try :
-				y2 = input('Choose a fourth integer (y2) smaller than {} : '.format(input_prime))
-				if y2 > input_prime :
-					raise ValueError
-			except Errors :
-				print 'Your choice wasn\'t smaller than {}. Try again'.format(input_prime)
-				continue
-			else : 
-				break
-		while True :
-			try :
-				w_input = input('Choose a last integer (w) smaller than {} : '.format(input_prime))
-				if w_input > input_prime :
-					raise ValueError
-			except Errors :
-				print 'Your choice wasn\'t smaller than {}. Try again'.format(input_prime)
-				continue
-			else :
-				break
+		
+		def try_input(self, msg, prime):
+			while True :
+				try :
+					user_input = input(msg)
+					if user_input > prime :
+						raise ValueError
+				except Errors :
+					print 'Your choice wasn\'t smaller than {}. Try again.'.format(prime)
+					continue
+				else :
+					print type(user_input)
+					break
+			return user_input
+
+		x1 = try_input(self,'Choose a first integer (x1) smaller than {} : '.format(input_prime),input_prime)
+		x2 = try_input(self,'Choose a second integer (x2) smaller than {} : '.format(input_prime),input_prime)
+		y1 = try_input(self,'Choose a third integer (y1) smaller than {} : '.format(input_prime),input_prime)
+		y2 = try_input(self,'Choose a fourh integer (y2) smaller than {} : '.format(input_prime),input_prime)
+		w_input = try_input(self,'Choose a last integer (w) smaller than {} : '.format(input_prime),input_prime)
+
 		# calculate x, y, and w
 		x = (alpha1**x1)*(alpha2**x2)
 		y = (alpha1**y1)*(alpha2**y2)
