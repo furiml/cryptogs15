@@ -139,15 +139,15 @@ class Key:
 		
 		# pad and concatenates the chunks
 		for i in range(0,20):
-			# print tour_keys['tour_key{0}'.format(i)]
+			debug(tour_keys['tour_key{0}'.format(i)])
 			temp = ""
 			for e in tour_keys['tour_key{0}'.format(i)]:
 				new = '0'*(16-len(e))+e
-				# print new
+				debug(new)
 				temp += new
-			# print temp
+			debug(temp)
 			tour_keys['tour_key{0}'.format(i)] = temp
-			# print ""
+			debug("")
 		
 		# and returns the dictionnary
 		return tour_keys		
@@ -191,9 +191,9 @@ class Encryption:
 		binary = binary.zfill(len(binary) + 8-(len(binary) % 8))
 		binary = binary + '0'*(s - (len(binary) % s))
 
-		# print "Formatted message :"
-		# print binary
-		# print ""
+		debug("Formatted message :")
+		debug(binary)
+		debug("")
 		return binary
 
 	def pad_left(self,b,s):
@@ -210,38 +210,38 @@ class Encryption:
 
 		# ECB = idependant treatment of each block
 		for id_b, b in enumerate(chunked_message):
-			# print "Chunked message #",id_b,":"
-			# print
-			# print "===================== TOUR 0 ====================="
+			debug("Chunked message #",id_b,":")
+			debug("")
+			debug("===================== TOUR 0 =====================")
 			# Init with tour_key0
-			# print "HEX;",hex(int(b,2))
-			# print "KEY:",hex(int(keys['tour_key0'],16))
-			# print "RES:",hex((int(b,2) ^ int(keys['tour_key0'],16)))
+			debug("HEX;",hex(int(b,2)))
+			debug("KEY:",hex(int(keys['tour_key0'],16)))
+			debug("RES:",hex((int(b,2) ^ int(keys['tour_key0'],16))))
 			# For each block, we create a crypted block. Blocks are not related
 			encrypted_message.append(hex((int(b,2) ^ int(keys['tour_key0'],16))))
-			# print ""
+			debug("")
 			
 			for k in range(1,20): # loop through tour_keys
-				# print "===================== TOUR",k,"====================="
+				debug("===================== TOUR",k,"=====================")
 				# Extract words (64 bits)
 				b_words = [b[i:i+64] for i in range(0, len(b), 64)]
-				# print b_words
+				debug(b_words)
 
 				# mix
 				for w in range(0,len(b_words)/2): # for every pair of words
 					b_words_new = self.mix(b_words[w*2],b_words[w*2+1])
 					b_words[w*2]   = self.pad_left(b_words_new[0][2:],64)
 					b_words[w*2+1] = self.pad_left(b_words_new[1][2:],64)
-					# print "(mix)"
+					debug("(mix)")
 				
-				# print b_words
+				debug(b_words)
 
 				# permutation
 				self.permutation(b_words)
-				# print "HEX;",hex(int(b,2))
-				# print "KEY:",hex(int(keys['tour_key{0}'.format(k)],16))
-				# print "RES:",hex((int(b,2) ^ int(keys['tour_key{0}'.format(k)],16)))
-				# print ""
+				debug("HEX;",hex(int(b,2)))
+				debug("KEY:",hex(int(keys['tour_key{0}'.format(k)],16)))
+				debug("RES:",hex((int(b,2) ^ int(keys['tour_key{0}'.format(k)],16))))
+				debug("")
 		return 1
 		
 
