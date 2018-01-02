@@ -11,6 +11,12 @@ possible_key_size = [256,512,1024]
 c_const = 0x1bd11bdaa9fc1a22
 # see subject
 
+DEBUG=0
+
+def debug(str):
+	if DEBUG:
+		print str
+
 class Key:
 	def __init__(self):
 		global possible_key_size
