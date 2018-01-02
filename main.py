@@ -11,11 +11,14 @@ possible_key_size = [256,512,1024]
 c_const = 0x1bd11bdaa9fc1a22
 # see subject
 
-DEBUG=0
+DEBUG=1
 
-def debug(str):
+def debug(*strs):
 	if DEBUG:
-		print str
+		list = []
+		for str in strs:
+			list.append(str)
+		print ' '.join(list)
 
 class Key:
 	def __init__(self):
@@ -164,3 +167,4 @@ my_key = key.generate_key(256)
 print 'My key is :',
 print my_key['Key']
 print key.generate_tour_keys()
+debug("a","b")
