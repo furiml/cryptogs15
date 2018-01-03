@@ -59,46 +59,6 @@ class Key:
 		# xors tweak0 and tweak1 to get tweak2
 		return tweaks_dic
 
-		# --------------------------------------------------- #
-		# below this, we plan to do a step by step generation #
-	 	# not used atm.										  #
-		# --------------------------------------------------- #
-
-	def step_generate_key(self, key_size):
-		"""
-		Generates a hex string 256, 512 or 1024 bits long
-		"""
-		if key_size not in possible_key_size :
-			raise ValueError('saisie invalide')
-		key_holder = binascii.b2a_hex(os.urandom(key_size/8))
-		return key_holder
-
-	def step_chunkify_key_step(self, key_word):
-		"""
-		Split the argument string into chunks of 64 bits
-		(4, 8 or 16 chunks)
-		"""
-		key_list = list(key_word)
-		key_chunks = []
-		for i in xrange(0, len(key_word),16):
-			key_chunks.append(''.join(key_list[i:i+16]))
-		return key_chunks
-
-	def step_add_last_chunk(self, key_chunks):
-		"""
-		Adds the last chunk to the key, which is a xor of c_const
-		and the other chunks
-		"""
-		last_chunk = c_const
-		for i in key_chunks:
-			last_chunk = last_chunk ^ int(i,16)
-		key_chunks.append(hex(last_chunk)[2:-1])
-		return key_chunks
-
-		# ---------------------------------- #
-		# step by step generation stops here #
-		# ---------------------------------- #
-
 	def generate_tour_keys(self):
 		"""
 		Generates 20 tour keys based on the instructions provided by our beloved guru, R.C.
