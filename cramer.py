@@ -10,16 +10,41 @@ class Public:
 		global Errors
 		return
 
+	def is_prime(self, n, k=10):		# Found this Miller-Rabin. Must learn how it works.
+		if n == 2:
+			return True
+		if not n & 1:
+			return False
+
+		def check(a, s, d, n):
+			x = pow(a, d, n)
+			if x == 1:
+				return True
+			for i in xrange(s - 1):
+				if x == n - 1:
+					return True
+				x = pow(x, 2, n)
+			return x == n - 1
+		s = 0
+		d = n - 1
+		while d % 2 == 0:
+			d >>= 1
+			s += 1
+		for i in xrange(k):
+			a = random.randrange(2, n - 1)
+			if not check(a, s, d, n):
+				return False
+		return True
+
 	def create_public(self):
 		while True :
 			try :
 				input_prime = int(input('Choose a prime : '))
-				for i in range(2,input_prime) :
-					if input_prime % i == 0:
-						raise ValueError
-				print 'Good job !'	
-			except ValueError :						# TODO : tester si input_prime est premier
-				print 'Your choice isn\'t a prime'	# TODO 
+				if not self.is_prime(input_prime):
+					raise ValueError
+				print 'Good job ! Listing {}\'s generators...'.format(input_prime)	
+			except ValueError :
+				print 'Your choice isn\'t a prime'
 			else :
 				break
 
