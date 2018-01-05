@@ -2,6 +2,7 @@
 
 import secrets
 import random
+import binascii
 # import sys
 
 # error handling easier using a tuple later on
@@ -20,6 +21,10 @@ def try_input(self, msg, integer):
 				else :
 					break
 			return user_input
+
+def random_smaller(self, mini, maxi):
+	s_r = secrets.SystemRandom()
+	return s_r.randrange(mini,maxi)
 
 class Public:
 	def __init__(self):
@@ -81,11 +86,12 @@ class Public:
 
 		alpha1 = prime_generators[0]
 		alpha2 = prime_generators[1]
-		x1 = s_r.randrange(1,input_prime)
-		x2 = s_r.randrange(1,input_prime)
-		y1 = s_r.randrange(1,input_prime)
-		y2 = s_r.randrange(1,input_prime)
-		w_input = s_r.randrange(1,input_prime)
+		x1 = random_smaller(self,1,input_prime)
+		x2 = random_smaller(self,1,input_prime)
+		y1 = random_smaller(self,1,input_prime)
+		y2 = random_smaller(self,1,input_prime)
+		w_input = random_smaller(self,1,input_prime)
+
 		priv = (x1,x2,y1,y2,w_input)
 		priv_str = str(priv)
 		priv_file = open('key.priv','w')
@@ -104,16 +110,42 @@ class Public:
 		return pub
 
 class Encryption:
-	def __init__(self):
+	def __init__(self, msg):
 		global Errors
+		m = self.pad(msg.encode(),64)
+		print(m)
 		return
-	def create_coded(self, public_key):
-		b = try_input(self,'Choose an integer smaller than {} : '.format(public_key[0]), public_key[0])
-		b1 = public_key[1]**b
-		b2 = public_key[2]**b
-		c = (public_key[5]**b) * m
+
+	def pad(self,m,s):
+		"""
+		Add zeros at the end of the message to complete the block
+		m: message
+		s: size of the blocks
+		"""
+		binary = bin(int(binascii.hexlify(m),16))[2:]
+		binary = binary.zfill(len(binary) + 8-(len(binary) % 8))
+		binary = binary + '0'*(s - (len(binary) % s))
+
+		# print "Formatted message :"
+		# print binary
+		# print ""
+		return binary
 
 
-# my_public = Public()
+	def create_coded(self, pub_key_file):
+		try :
+			with open(pub_key_file) as f :
+				pub = eval(f.read())
+		except :
+			print('File not found.')
+
+
+		b = random_smaller(self,1,pub[0])
+		b1 = pow(pub[1],b,pub[0])
+		b2 = pow(pub[2],b,pub[0])
+		# c = (public_key[5]**b) * m
+		print(b, b1, b2)
+
+
 my_public_key = Public().create_public()
-print(my_public_key)
+print(Encryption('oh hello I am a quite long motherfucking full of bytes message').create_coded('key.pub'))
