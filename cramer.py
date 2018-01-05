@@ -2,7 +2,7 @@
 
 import secrets
 import random
-import sys
+# import sys
 
 # error handling easier using a tuple later on
 Errors = (ValueError, NameError, IndexError)
@@ -52,9 +52,7 @@ class Public:
 				return False
 		return True
 
-	def create_public(self):
-		# function for testing if an input is smaller than selected prime
-		
+	def create_public(self):		
 		# user query
 		while True :
 			try :
@@ -88,13 +86,22 @@ class Public:
 		y1 = s_r.randrange(1,input_prime)
 		y2 = s_r.randrange(1,input_prime)
 		w_input = s_r.randrange(1,input_prime)
-
+		priv = (x1,x2,y1,y2,w_input)
+		priv_str = str(priv)
+		priv_file = open('key.priv','w')
+		priv_file.write(priv_str + '\n')
+		priv_file.close()
 		# calculate x, y, and w
 		x = int(pow(alpha1,x1) * pow(alpha2,x2) % input_prime)
 		y = int(pow(alpha1,y1) * pow(alpha2,y2) % input_prime)
 		w = int(pow(alpha1,w_input,input_prime))
 		# as we return all the elements in a tuple, mind the index !
-		return (input_prime, alpha1, alpha2, x, y, w)
+		pub = (input_prime, alpha1, alpha2, x, y, w)
+		pub_str = str(pub)
+		pub_file = open('key.pub','w')
+		pub_file.write(pub_str + '\n')
+		pub_file.close()
+		return pub
 
 class Encryption:
 	def __init__(self):
