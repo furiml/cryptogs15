@@ -11,6 +11,17 @@ possible_key_size = [256,512,1024]
 c_const = 0x1bd11bdaa9fc1a22
 # see subject
 
+DEBUG=1
+
+def debug(*strs):
+        if DEBUG:
+                list = []
+                for s in strs:
+                        if not isinstance(s, basestring):
+                                s = str(s)
+                        list.append(s)
+                print ' '.join(list)
+
 class Key:
 	def __init__(self):
 		global possible_key_size
@@ -18,10 +29,6 @@ class Key:
 		return
 
 	def generate_key(self, key_size):
-		if key_size not in possible_key_size:
-			raise ValueError('invalid value')
-			# in this case, the user chose an invalid value
-			# otherwise, generates a key of the chosen length
 		key = binascii.b2a_hex(os.urandom(key_size/8))
 		key_chunks = []
 		# we use a list to generate the chunks
@@ -47,46 +54,6 @@ class Key:
 		tweaks_dic.update({'Tweak2': hex(int(tweaks_dic['Tweak0'],16) ^ int(tweaks_dic['Tweak1'],16))[2:-1]})
 		# xors tweak0 and tweak1 to get tweak2
 		return tweaks_dic
-
-		# --------------------------------------------------- #
-		# below this, we plan to do a step by step generation #
-	 	# not used atm.										  #
-		# --------------------------------------------------- #
-
-	def step_generate_key(self, key_size):
-		"""
-		Generates a hex string 256, 512 or 1024 bits long
-		"""
-		if key_size not in possible_key_size :
-			raise ValueError('saisie invalide')
-		key_holder = binascii.b2a_hex(os.urandom(key_size/8))
-		return key_holder
-
-	def step_chunkify_key_step(self, key_word):
-		"""
-		Split the argument string into chunks of 64 bits
-		(4, 8 or 16 chunks)
-		"""
-		key_list = list(key_word)
-		key_chunks = []
-		for i in xrange(0, len(key_word),16):
-			key_chunks.append(''.join(key_list[i:i+16]))
-		return key_chunks
-
-	def step_add_last_chunk(self, key_chunks):
-		"""
-		Adds the last chunk to the key, which is a xor of c_const
-		and the other chunks
-		"""
-		last_chunk = c_const
-		for i in key_chunks:
-			last_chunk = last_chunk ^ int(i,16)
-		key_chunks.append(hex(last_chunk)[2:-1])
-		return key_chunks
-
-		# ---------------------------------- #
-		# step by step generation stops here #
-		# ---------------------------------- #
 
 	def generate_tour_keys(self):
 		"""
@@ -137,27 +104,27 @@ class Key:
 		
 		# pad and concatenates the chunks
 		for i in range(0,20):
-			print tour_keys['tour_key{0}'.format(i)]
+			# print tour_keys['tour_key{0}'.format(i)]
 			temp = ""
 			for e in tour_keys['tour_key{0}'.format(i)]:
 				new = '0'*(16-len(e))+e
-				print new
+				# print new
 				temp += new
-			print temp
+			# print temp
 			tour_keys['tour_key{0}'.format(i)] = temp
-			print ""
+			# print ""
 		
 		# and returns the dictionnary
 		return tour_keys		
 
 class Encryption:
-        def __init__(self, m, s, keyset):
-                self.block_size = s
+	def __init__(self, m, s, keyset):
+		self.block_size = s
 		message = m
 		self.keyset = keyset
 		# generer les cles ici
 		self.tf_ecb_main(self.pad(message,self.block_size),keyset)
-                return
+		return
 
 	def rot(self,m,k,n):
 		"""
@@ -166,7 +133,7 @@ class Encryption:
 		k: number of bits to rotate
 		n: size of the message
 		"""
-        	return ((m<<k)|(m>>(n-k)))&((1<<n)-1)
+		return ((m<<k)|(m>>(n-k)))&((1<<n)-1)
 
 	def mix(self,m1,m2):
 		"""
@@ -189,18 +156,18 @@ class Encryption:
 		binary = binary.zfill(len(binary) + 8-(len(binary) % 8))
 		binary = binary + '0'*(s - (len(binary) % s))
 
-		print "Formatted message :"
-		print binary
-		print ""
+		# print "Formatted message :"
+		# print binary
+		# print ""
 		return binary
 
 	def pad_left(self,b,s):
 		"""
 		Add zeros at the begining of a number
 		b: binary number
-                s: size of the block
+		s: size of the block
 		"""
-               	return '0'*(s - len(b)) + b
+		return '0'*(s - len(b)) + b
 
 	def tf_ecb_main(self, m, keys):
 		encrypted_message = []
@@ -208,49 +175,55 @@ class Encryption:
 
 		# ECB = idependant treatment of each block
 		for id_b, b in enumerate(chunked_message):
-			print "Chunked message #",id_b,":"
-			print
-			print "===================== TOUR 0 ====================="
+			# print "Chunked message #",id_b,":"
+			# print
+			# print "===================== TOUR 0 ====================="
 			# Init with tour_key0
-			print "HEX;",hex(int(b,2))
-                        print "KEY:",hex(int(keys['tour_key0'],16))
-                        print "RES:",hex((int(b,2) ^ int(keys['tour_key0'],16)))
-                	# For each block, we create a crypted block. Blocks are not related
+			# print "HEX;",hex(int(b,2))
+			# print "KEY:",hex(int(keys['tour_key0'],16))
+			# print "RES:",hex((int(b,2) ^ int(keys['tour_key0'],16)))
+			# For each block, we create a crypted block. Blocks are not related
 			encrypted_message.append(hex((int(b,2) ^ int(keys['tour_key0'],16))))
-		        print ""
+			# print ""
 			
 			for k in range(1,20): # loop through tour_keys
-				print "===================== TOUR",k,"====================="
+				# print "===================== TOUR",k,"====================="
 				# Extract words (64 bits)
 				b_words = [b[i:i+64] for i in range(0, len(b), 64)]
-				print b_words
+				# print b_words
 
 				# mix
 				for w in range(0,len(b_words)/2): # for every pair of words
 					b_words_new = self.mix(b_words[w*2],b_words[w*2+1])
 					b_words[w*2]   = self.pad_left(b_words_new[0][2:],64)
 					b_words[w*2+1] = self.pad_left(b_words_new[1][2:],64)
-					print "(mix)"
+					# print "(mix)"
 				
-				print b_words
+				# print b_words
 
 				# permutation
 				self.permutation(b_words)
-
-        	        	print "HEX;",hex(int(b,2))
-                		print "KEY:",hex(int(keys['tour_key{0}'.format(k)],16))
-	                	print "RES:",hex((int(b,2) ^ int(keys['tour_key{0}'.format(k)],16)))
-				print ""
+				# print "HEX;",hex(int(b,2))
+				# print "KEY:",hex(int(keys['tour_key{0}'.format(k)],16))
+				# print "RES:",hex((int(b,2) ^ int(keys['tour_key{0}'.format(k)],16)))
+				# print ""
 		return 1
 		
 
 # ---------- # 
 # here we go #
 # ---------- #
-
-B_SIZE = 256
-
 key = Key()
+while True :
+	try :
+		B_SIZE = int(input('Choose a key size (256, 512 or 1024 bits) : '))
+		if B_SIZE not in possible_key_size :
+			raise ValueError
+	except ValueError :
+		print 'Invalid size. Try again.'
+		continue
+	else :
+		break
 my_key = key.generate_key(B_SIZE)
 print 'My key is :',
 print my_key['Key']
