@@ -11,7 +11,7 @@ possible_key_size = [256,512,1024]
 c_const = 0x1bd11bdaa9fc1a22
 # see subject
 
-DEBUG=1
+DEBUG=0
 
 def debug(*strs):
         if DEBUG:
@@ -104,15 +104,15 @@ class Key:
 		
 		# pad and concatenates the chunks
 		for i in range(0,20):
-			# print tour_keys['tour_key{0}'.format(i)]
+			#debug(tour_keys['tour_key{0}'.format(i)])
 			temp = ""
 			for e in tour_keys['tour_key{0}'.format(i)]:
 				new = '0'*(16-len(e))+e
-				# print new
+				#debug(new)
 				temp += new
-			# print temp
+			#debug(temp)
 			tour_keys['tour_key{0}'.format(i)] = temp
-			# print ""
+			#debug("")
 		
 		# and returns the dictionnary
 		return tour_keys		
@@ -123,10 +123,11 @@ class Encryption:
 		message = m
 		self.keyset = keyset
 		# generer les cles ici
-		self.tf_ecb_main(self.pad(message,self.block_size),keyset)
+		self.enc = self.tf_ecb_main(self.pad(message,self.block_size),keyset)
+		self.dec = self.tf_ecb_main_decrypt(self.enc,keyset)
 		return
 
-	def rot(self,m,k,n):
+	def rot_left(self,m,k,n):
 		"""
 		Perform a binary left rotation of the message (ie. 0100 -> 1000 if k = 1)
 		m: message to rotate
@@ -135,16 +136,53 @@ class Encryption:
 		"""
 		return ((m<<k)|(m>>(n-k)))&((1<<n)-1)
 
+	def rot_right(self,m,k,n):
+                """
+                Perform a binary right rotation of the message (ie. 0100 -> 0010 if k = 1)
+                m: message to rotate
+                k: number of bits to rotate
+                n: size of the message
+                """
+                return ((m>>k)|(m<<(n-k)))&((1>>n)-1)
+
 	def mix(self,m1,m2):
 		"""
 		Mix a pair of words (64 bits)
 		"""
-		m1_new = int(m1,2) + int(m2,2) % (2**64)
-		m2_new = m1_new ^ self.rot(int(m2,2),1,64)
-		return bin(m1_new),bin(m2_new)
+		m1_new = (int(m1,2) + int(m2,2)) % (2**64)
+		m2_new = m1_new ^ self.rot_left(int(m2,2),5,64)
+
+		#debug(m1)
+		m1_new = self.pad_left(bin(m1_new)[2:],64)
+		#debug(m1_new)
+		#debug('---')
+                #debug(m2)
+		m2_new = self.pad_left(bin(m2_new)[2:],64)
+                #debug(m2_new)
+		return m1_new,m2_new
 
 	def permutation(self,b):
 		return b
+	
+	def mix_reverse(self,m1,m2):
+		#debug("===== reverse mix =====")
+
+		m2_new = self.rot_right(int(m1,2) ^ int(m2,2),5,64)
+		m1_new = (int(m1,2) - m2_new) % (2**64)
+		
+		m1_new = self.pad_left(bin(m1_new)[2:],64)
+		m2_new = self.pad_left(bin(m2_new)[2:],64)
+
+		#debug(m1)
+		#debug(m2)
+		#debug(m1_new)
+		#debug(m2_new)
+
+		return m1,m2
+
+	def permutation_reverse(self,b):
+		return b
+
 
 	def pad(self,m,s):
 		"""
@@ -155,11 +193,15 @@ class Encryption:
 		binary = bin(int(binascii.hexlify(m),16))[2:]
 		binary = binary.zfill(len(binary) + 8-(len(binary) % 8))
 		binary = binary + '0'*(s - (len(binary) % s))
+		#debug(self.bin2ascii(binary))
 
-		# print "Formatted message :"
-		# print binary
-		# print ""
+		#debug("Formatted message :")
+		#debug(binary)
+		#debug("")
 		return binary
+
+	def bin2ascii(self,m):
+		return binascii.unhexlify('%x' % int('0b' + m,2))
 
 	def pad_left(self,b,s):
 		"""
@@ -175,41 +217,102 @@ class Encryption:
 
 		# ECB = idependant treatment of each block
 		for id_b, b in enumerate(chunked_message):
-			# print "Chunked message #",id_b,":"
-			# print
-			# print "===================== TOUR 0 ====================="
+			#debug("Chunked message #",id_b,":")
+			#debug("")
+			#debug("===================== TOUR 0 =====================")
 			# Init with tour_key0
-			# print "HEX;",hex(int(b,2))
-			# print "KEY:",hex(int(keys['tour_key0'],16))
-			# print "RES:",hex((int(b,2) ^ int(keys['tour_key0'],16)))
 			# For each block, we create a crypted block. Blocks are not related
-			encrypted_message.append(hex((int(b,2) ^ int(keys['tour_key0'],16))))
-			# print ""
 			
+			b = self.pad_left(bin((int(b,2) ^ int(keys['tour_key0'],16)))[2:],self.block_size)
+			#debug("")
+
 			for k in range(1,20): # loop through tour_keys
-				# print "===================== TOUR",k,"====================="
+				#debug("===================== TOUR",k,"=====================")
+
 				# Extract words (64 bits)
-				b_words = [b[i:i+64] for i in range(0, len(b), 64)]
-				# print b_words
+                                b_words = [b[i:i+64] for i in range(0, len(b), 64)]
+                                #debug(b_words)
 
-				# mix
-				for w in range(0,len(b_words)/2): # for every pair of words
-					b_words_new = self.mix(b_words[w*2],b_words[w*2+1])
-					b_words[w*2]   = self.pad_left(b_words_new[0][2:],64)
-					b_words[w*2+1] = self.pad_left(b_words_new[1][2:],64)
-					# print "(mix)"
+				for i in range(0,4):
+					#debug("On travaille sur :")
+					#debug(b_words)
+					#debug("mix/permutation #",i)
+					# mix
+					for w in range(0,len(b_words)/2): # for every pair of words
+						#debug("MIX")
+						b_words_new = self.mix(b_words[w*2],b_words[w*2+1])	# mix
+						b_words[w*2]   = self.pad_left(b_words_new[0][2:],64)	# update
+						b_words[w*2+1] = self.pad_left(b_words_new[1][2:],64)
+						#debug(b_words)
+
+					# permutation
+					#debug("PERMUTATION")
+					b_words = self.permutation(b_words)
 				
-				# print b_words
+				# Putting words together
+				b = ''.join(b_words)
+				#debug(b)
+				#debug(self.pad_left(bin(int(keys['tour_key{0}'.format(k)],16))[2:],self.block_size))
+				b = self.pad_left(bin(int(b,2) ^ int(keys['tour_key{0}'.format(k)],16))[2:],self.block_size)
+				#debug(b)
+				
+			encrypted_message.append(b)
+			#debug("=============ENCRYPOTTETETOEIUTOEITOPIEOT================")
+			#debug(encrypted_message)
+		encrypted_message_final = ''.join(encrypted_message)
+		return encrypted_message_final
 
-				# permutation
-				self.permutation(b_words)
-				# print "HEX;",hex(int(b,2))
-				# print "KEY:",hex(int(keys['tour_key{0}'.format(k)],16))
-				# print "RES:",hex((int(b,2) ^ int(keys['tour_key{0}'.format(k)],16)))
-				# print ""
-		return 1
+	def tf_ecb_main_decrypt(self,m,keys):
+		# xor last key
+		# permute-1
+		# mix-1
+		# ...
+		# xor key n-1
+		# ...
+		# xor key 0
 		
+		deciphered_message = []
+                chunked_message = [m[i:i+self.block_size] for i in range(0, len(m), self.block_size)]
 
+                # ECB = idependant treatment of each block
+                for id_b, b in enumerate(chunked_message): # loop through tour keys
+			#debug(b)
+			#debug(bin(int(keys['tour_key19'],16))[2:])
+			b = bin(int(b,2) ^ int(keys['tour_key19'],16))[2:]
+			#debug(b)
+
+			for k in range(18,-1,-1): # loop through tour_keys, reverse
+                                #debug("===================== TOUR",k,"=====================")
+
+                                # Extract words (64 bits)
+                                b_words = [b[i:i+64] for i in range(0, len(b), 64)]
+                                #debug(b_words)
+				
+                                for i in range(0,4):
+                                        # permutation
+					b_words = self.permutation_reverse(b_words)
+
+					# mix
+                                        for w in range(0,len(b_words)/2): # for every pair of words
+
+                                                b_words_new = self.mix_reverse(b_words[w*2],b_words[w*2+1])     # mix
+                                                b_words[w*2]   = self.pad_left(b_words_new[0][2:],64)   # update
+                                                b_words[w*2+1] = self.pad_left(b_words_new[1][2:],64)
+                                                #debug(b_words)
+
+                                # Putting words together
+                                b = ''.join(b_words)
+                                #debug(b)
+                                #debug(self.pad_left(bin(int(keys['tour_key{0}'.format(k)],16))[2:],self.block_size))
+                                b = self.pad_left(bin(int(b,2) ^ int(keys['tour_key{0}'.format(k)],16))[2:],self.block_size)
+                                #debug(b)
+				
+			#debug("")
+			deciphered_message.append(b)
+                        #debug("=============ENCRYPOTTETETOEIUTOEITOPIEOT================")
+                        #debug(encrypted_message)
+                deciphered_message_final = ''.join(deciphered_message)
+                return deciphered_message_final
 # ---------- # 
 # here we go #
 # ---------- #
@@ -236,4 +339,10 @@ print my_tour_keys
 
 print ""
 
-enc = Encryption("Coucou comment ca va ? Moi ca va pas mal, meme si je suis oblige de bosser ca pendant les vacances, car je veux mon master",B_SIZE,my_tour_keys)
+enc1 = Encryption("Coucou comment ca va ? Moi ca va pas mal, meme si GS15 me fait froid dans le dos.",B_SIZE,my_tour_keys)
+print "Chiffrement"
+print enc1.enc
+print enc1.bin2ascii(enc1.enc)
+print "Dechiffrement"
+print enc1.dec
+print enc1.bin2ascii(enc1.dec)
