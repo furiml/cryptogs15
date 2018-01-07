@@ -3,7 +3,8 @@
 import secrets
 import random
 import binascii
-# import sys
+import hashlib
+import math
 
 # error handling easier using a tuple later on
 Errors = (ValueError, NameError, IndexError)
@@ -110,10 +111,8 @@ class Public:
 		return pub
 
 class Encryption:
-	def __init__(self, msg):
+	def __init__(self):
 		global Errors
-		m = self.pad(msg.encode(),64)
-		print(m)
 		return
 
 	def pad(self,m,s):
@@ -123,29 +122,69 @@ class Encryption:
 		s: size of the blocks
 		"""
 		binary = bin(int(binascii.hexlify(m),16))[2:]
-		binary = binary.zfill(len(binary) + 8-(len(binary) % 8))
+		binary = binary.zfill(len(binary) + 8-(len(binary) % 64))
 		binary = binary + '0'*(s - (len(binary) % s))
-
-		# print "Formatted message :"
-		# print binary
-		# print ""
+		binary = [binary[i:i+s] for i in range(0, len(binary), s)]
 		return binary
 
 
-	def create_coded(self, pub_key_file):
+	def create_coded(self, pub_key_file, msg):
 		try :
 			with open(pub_key_file) as f :
 				pub = eval(f.read())
 		except :
 			print('File not found.')
-
-
+		m = self.pad(msg.encode(),8)
+		# print('message haché + paddé : {}'.format(m))
 		b = random_smaller(self,1,pub[0])
-		b1 = pow(pub[1],b,pub[0])
-		b2 = pow(pub[2],b,pub[0])
-		# c = (public_key[5]**b) * m
-		print(b, b1, b2)
+		# print('b is {}'.format(b))
+		coded = []
+		for i in m :
+			b1 = pow(pub[1],b,pub[0])
+			b2 = pow(pub[2],b,pub[0])
+			c = pow(pow(pub[5],b,pub[0]) * int(i,2),1,pub[0])
+			temp_list = [str(b1),str(b2),str(c)]
+			mysha = ''.join(temp_list)
+			sha = hashlib.sha512()
+			sha.update(mysha.encode('utf-8'))
+			beta = sha.hexdigest()
+			v = pow(pow(pub[3],b,pub[0]) * pow(pub[4],b*int(beta,16),pub[0]),1,pub[0])
+			coded.append((b1,b2,c,v))
+		coded_file = open('coded.crypt','w')
+		for i in coded :
+			for j in i :
+				coded_file.write(bin(j)[2:])
+		coded_file.write('\n')
+		coded_file.close()
+		return coded
+
+class Decryption:
+	def __init__(self):
+		global Errors
+		return
+
+	def verify(self,coded,priv_key_file,pub_key_file):
+		try:
+			with open(priv_key_file) as f :
+				priv = eval(f.read())
+			with open(pub_key_file) as f :
+				pub = eval(f.read())
+		except :
+			print('File not found.')
+		for i in coded :
+			temp_hash = []
+			for j in i :
+				temp_hash.append(str(j))
+			sha = hashlib.md5()
+			sha.update(''.join(temp_hash).encode('utf-8'))
+			betaprim = sha.hexdigest()
+			vprim = (pow(i[0],priv[0],pub[0]) * pow(i[1],priv[1],pub[0]) * pow(pow(i[0],priv[2],pub[0]) * pow(i[1],priv[3],pub[0]),int(betaprim,16),pub[0])) % pub[0]
+			if vprim != i[3] :
+				raise ValueError('La vérification a échoué au bloc {}'.format(i))
+		return
 
 
 my_public_key = Public().create_public()
-print(Encryption('oh hello I am a quite long motherfucking full of bytes message').create_coded('key.pub'))
+coded = Encryption().create_coded('key.pub','Hi, i am a message which is several bytes long')
+#  print('codé : {}'.format(coded))
+decode = Decryption().verify(coded,'key.priv','key.pub')
