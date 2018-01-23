@@ -1,2 +1,7 @@
-*.crypt
+<<<<<<< HEAD
 key.*
+*.crypt
+=======
+key.*
+*.crypt
+>>>>>>> master
